@@ -299,9 +299,9 @@ export default function Component() {
           '顧客企業では、従来の顧客管理システムが老朽化しており、顧客データの正確な把握や分析が困難になっています。これにより、効果的なマーケティング戦略の立案や顧客ニーズへの迅速な対応が阻害されており、競争力の低下につながっています。',
           '顧客企業では、急速なデジタル化に伴い、従業員のITスキルの不足が顕在化しています。これにより、新しいツールやシステムの導入が進まず、業務効率の改善が滞っています。従業員の能力開発と、使いやすいITソリューションの導入が課題となっています。'
         ],
-        approvalProcess: ['部長→本部長→社長', '課長→部長→社長', '部長→社長'],
+        approvalProcess: ['部長→本部長→社長', '課長部長→社長', '部長→社長'],
         competitors: ['C社、D社', 'H社、I社', 'J社、K社、L社'],
-        salesStructure: ['営業部→営業1課、営業2課、営業3課', '営業部→営業1課、営業2課、営業3課、営業4課', '営業部→東日本営業部、西日本営業部'],
+        salesStructure: ['営業部→営業1課、営業2課、営業3課', '営業部→営業1課営業2課、営業3課、営業4課', '営業部→東日本営業部、西日本営業部'],
         salesPeople: ['60', '70', '55'],
         onlineOfflineRatio: ['40:60', '50:50', '35:65'],
         prepTime: ['45', '50', '40'],
@@ -389,46 +389,68 @@ export default function Component() {
     const typedText = typedTexts[key]
 
     return (
-      <div className="space-y-2 mb-6 pb-4 border-b border-gray-200">
-        <Label htmlFor={key} className="text-base font-semibold text-primary mb-2 block">{label}</Label>
-        <div className="flex items-center space-x-4">
-          <div className="w-1/4 text-left">
-            <span className="text-sm text-muted-foreground">
-              {key.includes('Date') ? formatDate(previousValue as Date) : previousValue as string}
-            </span>
+      <div className="flex items-start py-2 border-b border-gray-100 hover:bg-gray-50">
+        {/* ラベル */}
+        <div className="w-[18%]">
+          <Label htmlFor={key} className="text-sm font-medium text-gray-600">{label}</Label>
+        </div>
+        
+        {/* 元の値 */}
+        <div className="w-[24%] pl-2">
+          <span className="text-sm text-muted-foreground">
+            {key.includes('Date') ? formatDate(previousValue as Date) : previousValue as string}
+          </span>
+        </div>
+
+        {/* 矢印 */}
+        <div className="w-[4%] flex justify-center">
+          <span className="text-gray-400">→</span>
+        </div>
+
+        {/* 入力欄 */}
+        <div className="w-[44%] flex flex-col">
+          <div className={cn(
+            "relative",
+            shouldShowBorder && "before:absolute before:-inset-1 before:border-2 before:border-blue-500 before:rounded-md"
+          )}>
+            {React.cloneElement(content as React.ReactElement, {
+              onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | Date) => {
+                if (e instanceof Date) {
+                  (content as React.ReactElement).props.onSelect(e)
+                  handleUserModification(key)
+                } else {
+                  (content as React.ReactElement).props.onChange(e)
+                  handleUserModification(key)
+                }
+              },
+              value: isTyping ? typedText : (content as React.ReactElement).props.value,
+              className: cn(
+                (content as React.ReactElement).props.className,
+                "text-sm",
+                key === 'customerIssue' ? "min-h-[160px]" : "h-9" // 高さを160pxに変更
+              )
+            })}
           </div>
-          <span className="text-sm">→</span>
-          <div className="flex-1 w-1/2">
-            <div className={`p-2 rounded ${shouldShowBorder ? 'border-2 border-blue-500' : 'border-2 border-transparent'}`}>
-              {React.cloneElement(content as React.ReactElement, {
-                onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | Date) => {
-                  if (e instanceof Date) {
-                    (content as React.ReactElement).props.onSelect(e)
-                    handleUserModification(key)
-                  } else {
-                    (content as React.ReactElement).props.onChange(e)
-                    handleUserModification(key)
-                  }
-                },
-                value: isTyping ? typedText : (content as React.ReactElement).props.value,
-              })}
+          
+          {isLoading[key] ? (
+            <div className="mt-2 flex items-center space-x-2"> {/* mt-1 から mt-2 に変更 */}
+              <Loader2 className="h-3 w-3 animate-spin" />
+              <span className="text-xs text-muted-foreground">推定中...</span>
             </div>
-            {isLoading[key] ? (
-              <div className="mt-2 flex items-center space-x-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm text-muted-foreground">推定中...</span>
-              </div>
-            ) : aiSuggestions[key] && (
-              <div className="mt-2 flex flex-wrap gap-2">
+          ) : aiSuggestions[key] && (
+            <div className="mt-2 space-y-1.5"> {/* 余白とレイアウトを調整 */}
+              <div className="text-xs text-muted-foreground">AI推定値:</div> {/* ラベルを追加 */}
+              <div className="flex flex-wrap gap-1.5"> {/* gap-1 から gap-1.5 に変更 */}
                 {aiSuggestions[key].map((suggestion, index) => (
                   <Badge
                     key={index}
                     variant="outline"
-                    className={`cursor-pointer ${
-                      index === 0 ? "bg-yellow-100 hover:bg-yellow-200 text-yellow-800" :
-                      index === 1 ? "bg-blue-100 hover:bg-blue-200 text-blue-800" :
-                      "bg-pink-100 hover:bg-pink-200 text-pink-800"
-                    }`}
+                    className={cn(
+                      "text-xs cursor-pointer py-0.5 px-2", // py-0 から py-0.5 に変更
+                      index === 0 ? "bg-yellow-50 hover:bg-yellow-100 text-yellow-700" :
+                      index === 1 ? "bg-blue-50 hover:bg-blue-100 text-blue-700" :
+                      "bg-pink-50 hover:bg-pink-100 text-pink-700"
+                    )}
                     onClick={() => {
                       switch (key) {
                         case 'orderProbability':
@@ -462,38 +484,43 @@ export default function Component() {
                   </Badge>
                 ))}
               </div>
-            )}
-          </div>
-          <div className="w-1/4">
-            <div className="flex space-x-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="sm" onClick={resetValue} className="flex items-center">
-                      <RotateCcwIcon className="h-4 w-4 mr-1" />
-                      <span className="text-xs">元の値に戻す</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>元に戻す</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="sm" onClick={() => getAiSuggestions(key)} className="flex items-center">
-                      <SparklesIcon className="h-4 w-4 mr-1" />
-                      <span className="text-xs">AIの推定値</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>AIの推定値を取得</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
             </div>
-          </div>
+          )}
+        </div>
+
+        {/* アクションボタン */}
+        <div className="w-[10%] flex justify-end space-x-1 pl-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={resetValue}
+                  className="h-8 w-8 px-0"
+                >
+                  <RotateCcwIcon className="h-3 w-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>元に戻す</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => getAiSuggestions(key)}
+                  className="h-8 w-8 px-0"
+                >
+                  <SparklesIcon className="h-3 w-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>AIの推定値を取得</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
     )
@@ -505,23 +532,24 @@ export default function Component() {
   }
 
   return (
-    <Card className="w-full max-w-5xl mx-auto">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-2xl font-bold">株式会社XXX様商談（2024/10/1）</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center space-x-2 mb-6">
-          <Switch
-            id="show-changed"
-            checked={showOnlyChanged}
-            onCheckedChange={setShowOnlyChanged}
-          />
-          <Label htmlFor="show-changed" className="text-sm">
-            変更された項目のみ表示
-          </Label>
+    <Card className="w-full max-w-6xl mx-auto">
+      <CardHeader className="py-4">
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-xl font-bold">株式会社XXX様商談（2024/10/1）</CardTitle>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="show-changed"
+              checked={showOnlyChanged}
+              onCheckedChange={setShowOnlyChanged}
+            />
+            <Label htmlFor="show-changed" className="text-sm">
+              変更項目のみ
+            </Label>
+          </div>
         </div>
-
-        <div className="space-y-6">
+      </CardHeader>
+      <CardContent className="py-0">
+        <div className="divide-y divide-gray-100">
           {renderField('orderProbability', '受注確度', (
             <Select value={orderProbability} onValueChange={setOrderProbability}>
               <SelectTrigger className="w-full">
@@ -582,7 +610,7 @@ export default function Component() {
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {budgetRequestDate ? formatDate(budgetRequestDate) : <span>日付を選択</span>}
+                  {budgetRequestDate ? formatDate(budgetRequestDate) : <span>付を選択</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -649,130 +677,134 @@ export default function Component() {
           ), previousValues.competitors)}
         </div>
 
-        <Collapsible open={isOtherFieldsOpen} onOpenChange={setIsOtherFieldsOpen} className="mt-6">
+        <Collapsible open={isOtherFieldsOpen} onOpenChange={setIsOtherFieldsOpen} className="mt-4">
           <CollapsibleTrigger asChild>
-            <Button variant="outline" className="flex items-center justify-between w-full">
+            <Button variant="outline" className="flex items-center justify-between w-full h-8 text-sm">
               その他の項目
-              <ChevronDownIcon className={`h-4 w-4 transition-transform ${isOtherFieldsOpen ? 'transform rotate-180' : ''}`} />
+              <ChevronDownIcon className={cn("h-4 w-4 transition-transform", isOtherFieldsOpen && "rotate-180")} />
             </Button>
           </CollapsibleTrigger>
-          <CollapsibleContent className="mt-4 space-y-6">
-            {renderField('salesStructure', '営業組織の構造', (
-              <Input
-                id="salesStructure"
-                value={salesStructure}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSalesStructure(e.target.value)}
-                className="w-full"
-              />
-            ), previousValues.salesStructure)}
+          <CollapsibleContent className="mt-2">
+            <div className="divide-y divide-gray-100">
+              {renderField('salesStructure', '営業組織の構造', (
+                <Input
+                  id="salesStructure"
+                  value={salesStructure}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSalesStructure(e.target.value)}
+                  className="w-full"
+                />
+              ), previousValues.salesStructure)}
 
-            {renderField('salesPeople', '営業人数', (
-              <Input
-                id="salesPeople"
-                type="number"
-                value={salesPeople}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSalesPeople(e.target.value)}
-                className="w-full"
-              />
-            ), previousValues.salesPeople)}
+              {renderField('salesPeople', '営業人数', (
+                <Input
+                  id="salesPeople"
+                  type="number"
+                  value={salesPeople}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSalesPeople(e.target.value)}
+                  className="w-full"
+                />
+              ), previousValues.salesPeople)}
 
-            {renderField('onlineOfflineRatio', 'オンライン/オフライン商談比率', (
-              <Input
-                id="onlineOfflineRatio"
-                value={onlineOfflineRatio}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOnlineOfflineRatio(e.target.value)}
-                className="w-full"
-              />
-            ), previousValues.onlineOfflineRatio)}
+              {renderField('onlineOfflineRatio', 'オンライン/オフライン商談比率', (
+                <Input
+                  id="onlineOfflineRatio"
+                  value={onlineOfflineRatio}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOnlineOfflineRatio(e.target.value)}
+                  className="w-full"
+                />
+              ), previousValues.onlineOfflineRatio)}
 
-            {renderField('prepTime', '商談前の準備時間(分)', (
-              <Input
-                id="prepTime"
-                type="number"
-                value={prepTime}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrepTime(e.target.value)}
-                className="w-full"
-              />
-            ), previousValues.prepTime)}
+              {renderField('prepTime', '商談前の準備時間(分)', (
+                <Input
+                  id="prepTime"
+                  type="number"
+                  value={prepTime}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrepTime(e.target.value)}
+                  className="w-full"
+                />
+              ), previousValues.prepTime)}
 
-            {renderField('postMeetingTime', '商談後の作業時間(分)', (
-              <Input
-                id="postMeetingTime"
-                type="number"
-                value={postMeetingTime}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPostMeetingTime(e.target.value)}
-                className="w-full"
-              />
-            ), previousValues.postMeetingTime)}
+              {renderField('postMeetingTime', '商談後の作業時間(分)', (
+                <Input
+                  id="postMeetingTime"
+                  type="number"
+                  value={postMeetingTime}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPostMeetingTime(e.target.value)}
+                  className="w-full"
+                />
+              ), previousValues.postMeetingTime)}
 
-            {renderField('sfaCrm', '使っているSFA/CRM', (
-              <Input
-                id="sfaCrm"
-                value={sfaCrm}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSfaCrm(e.target.value)}
-                className="w-full"
-              />
-            ), previousValues.sfaCrm)}
+              {renderField('sfaCrm', '使っているSFA/CRM', (
+                <Input
+                  id="sfaCrm"
+                  value={sfaCrm}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSfaCrm(e.target.value)}
+                  className="w-full"
+                />
+              ), previousValues.sfaCrm)}
 
-            {renderField('dwh', '使っているDWH', (
-              <Input
-                id="dwh"
-                value={dwh}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDwh(e.target.value)}
-                className="w-full"
-              />
-            ), previousValues.dwh)}
+              {renderField('dwh', '使っているDWH', (
+                <Input
+                  id="dwh"
+                  value={dwh}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDwh(e.target.value)}
+                  className="w-full"
+                />
+              ), previousValues.dwh)}
 
-            {renderField('ma', '使っているMA', (
-              <Input
-                id="ma"
-                value={ma}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMa(e.target.value)}
-                className="w-full"
-              />
-            ), previousValues.ma)}
+              {renderField('ma', '使っているMA', (
+                <Input
+                  id="ma"
+                  value={ma}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMa(e.target.value)}
+                  className="w-full"
+                />
+              ), previousValues.ma)}
 
-            {renderField('otherTools', 'その他使っているツール', (
-              <Input
-                id="otherTools"
-                value={otherTools}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOtherTools(e.target.value)}
-                className="w-full"
-              />
-            ), previousValues.otherTools)}
+              {renderField('otherTools', 'その他使っているツール', (
+                <Input
+                  id="otherTools"
+                  value={otherTools}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOtherTools(e.target.value)}
+                  className="w-full"
+                />
+              ), previousValues.otherTools)}
 
-            {renderField('monthlyMeetings', '一人当たりの月商談数', (
-              <Input
-                id="monthlyMeetings"
-                type="number"
-                value={monthlyMeetings}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMonthlyMeetings(e.target.value)}
-                className="w-full"
-              />
-            ), previousValues.monthlyMeetings)}
+              {renderField('monthlyMeetings', '一人当たりの月商談数', (
+                <Input
+                  id="monthlyMeetings"
+                  type="number"
+                  value={monthlyMeetings}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMonthlyMeetings(e.target.value)}
+                  className="w-full"
+                />
+              ), previousValues.monthlyMeetings)}
 
-            {renderField('annualProductPrice', '商材単価（年間）', (
-              <Input
-                id="annualProductPrice"
-                type="number"
-                value={annualProductPrice}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnnualProductPrice(e.target.value)}
-                className="w-full"
-              />
-            ), previousValues.annualProductPrice)}
+              {renderField('annualProductPrice', '商材単価（年間）', (
+                <Input
+                  id="annualProductPrice"
+                  type="number"
+                  value={annualProductPrice}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnnualProductPrice(e.target.value)}
+                  className="w-full"
+                />
+              ), previousValues.annualProductPrice)}
 
-            {renderField('targetIndustries', '顧客ターゲット業界', (
-              <Input
-                id="targetIndustries"
-                value={targetIndustries}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTargetIndustries(e.target.value)}
-                className="w-full"
-              />
-            ), previousValues.targetIndustries)}
+              {renderField('targetIndustries', '顧客ターゲット業界', (
+                <Input
+                  id="targetIndustries"
+                  value={targetIndustries}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTargetIndustries(e.target.value)}
+                  className="w-full"
+                />
+              ), previousValues.targetIndustries)}
+            </div>
           </CollapsibleContent>
         </Collapsible>
 
-        <Button className="w-full mt-6" onClick={handleSave}>保存</Button>
+        <div className="py-6"> {/* 保存ボタンを包む div を追加し、上下の余白を設定 */}
+          <Button className="w-full" onClick={handleSave}>保存</Button>
+        </div>
       </CardContent>
     </Card>
   )
