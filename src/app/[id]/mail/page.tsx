@@ -165,7 +165,7 @@ YY氏（24分12秒）: "今ですねそのセールスフォースにしろど�
     setShowCheckmark(true)
     setTimeout(() => {
       setShowCheckmark(false)
-      router.push('/list')
+      router.push('/')
     }, 1500)
   }
 
