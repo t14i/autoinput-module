@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -18,6 +18,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Badge } from "@/components/ui/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { ChevronDownIcon } from "lucide-react"
+import { supabase } from '@/lib/supabase'
 
 // フォームフィールドの型定義
 type FieldType = {
@@ -25,7 +26,7 @@ type FieldType = {
   key: string
   type: 'select' | 'number' | 'date' | 'textarea' | 'text'
   previousValue: string | number | Date
-  initialValue: string | number | Date
+  updateValue: string | number | Date
   aiSuggestions?: (string | number | Date)[]
   options?: { value: string, label: string }[] // selectの場合のオプション
 }
@@ -39,199 +40,11 @@ type FormData = {
 // 型定義を追加
 type SuggestionValue = string | number | Date;
 
-// 正確なinitialFormDataを再現
-const initialFormData: FormData = {
-  title: "株式会社XXX様商談（2024/10/1）",
-  mainFields: [
-    {
-      label: "受注確度",
-      key: "orderProbability",
-      type: "select",
-      previousValue: "B",
-      initialValue: "A",
-      aiSuggestions: ["A", "B", "C"],
-      options: [
-        { value: "S", label: "S" },
-        { value: "A", label: "A" },
-        { value: "B", label: "B" },
-        { value: "C", label: "C" }
-      ]
-    },
-    {
-      label: "受注金額",
-      key: "orderAmount",
-      type: "number",
-      previousValue: 1000000,
-      initialValue: 1200000,
-      aiSuggestions: [1200000, 1500000, 900000]
-    },
-    {
-      label: "予算策定時期",
-      key: "budgetPrepDate",
-      type: "date",
-      previousValue: new Date("2023-05-01"),
-      initialValue: new Date("2023-05-01"),
-      aiSuggestions: [new Date("2023-05-02"), new Date("2023-05-03"), new Date("2023-05-04")]
-    },
-    {
-      label: "予算申請時期",
-      key: "budgetRequestDate",
-      type: "date",
-      previousValue: new Date("2023-05-15"),
-      initialValue: new Date("2023-05-20"),
-      aiSuggestions: [new Date("2023-05-18"), new Date("2023-05-22"), new Date("2023-05-25")]
-    },
-    {
-      label: "予算確定時期",
-      key: "budgetConfirmDate",
-      type: "date",
-      previousValue: new Date("2023-05-30"),
-      initialValue: new Date("2023-05-30"),
-      aiSuggestions: [new Date("2023-06-01"), new Date("2023-06-05"), new Date("2023-06-10")]
-    },
-    {
-      label: "顧客が抱えている課題",
-      key: "customerIssue",
-      type: "textarea",
-      previousValue: "顧客企業では、従来の手作業による在庫管理システムが非効率であり、人的ミスも多発しています。これにより、在庫の過不足が頻繁に発生し、業務効率の低下と顧客満足度の悪化を招いています。早急な改善が求められています。",
-      initialValue: "顧客企業では、数の部門間でのコミュニケーションが円滑に行われておらず、情報の共有が不十分です。これにより、業務の重複や遅延が発生し、全体的な生産性の低下を招いています。効果的な情報共有システムの導入が急務となっています。",
-      aiSuggestions: [
-        "顧客企業では、部門間の連携不足により情報の一元管理ができておらず、業務効率が低下しています。統合的な情報共有プラットフォームの導入が必要です。",
-        "部門間のコミュニケーション不足により、プロジェクトの進行が遅延しています。改善策として、定期的なミーティングと情報共有ツールの導入が考えられます。",
-        "情報共有の不備が原因で、業務の重複やミスが発生しています。クラウドベースのコラボレーションツールを導入し、リアルタイムでの情報共有を促進する必要があります。"
-      ]
-    },
-    {
-      label: "承認プロセス",
-      key: "approvalProcess",
-      type: "text",
-      previousValue: "部長→本部長→社長",
-      initialValue: "部長→本部長→社長",
-      aiSuggestions: ["課長→部長→本部長→社長", "部長→本部長→取締役会"]
-    },
-    {
-      label: "競合他社・代替手段",
-      key: "competitors",
-      type: "text",
-      previousValue: "A社、B社、自社開発",
-      initialValue: "C社、D社",
-      aiSuggestions: [
-        "C社、D社が競合として参入",
-        "新たな競合としてE社が出現",
-        "競合他社としてF社が市場に登場"
-      ]
-    }
-  ],
-  otherFields: [
-    {
-      label: "営業組織の構造",
-      key: "salesStructure",
-      type: "text",
-      previousValue: "営業部→営業1課、営業2課、営業3課",
-      initialValue: "営業部→営業1課、営業2課、営業3課",
-      aiSuggestions: [
-        "営業部→営業1課、営業2課、営業4課",
-        "営業部→営業1課、営業3課、営業4課",
-        "営業部→営業1課、営業2課、営業5課"
-      ]
-    },
-    {
-      label: "営業人数",
-      key: "salesPeople",
-      type: "number",
-      previousValue: "60",
-      initialValue: "60",
-      aiSuggestions: ["55", "65", "70"]
-    },
-    {
-      label: "オンライン/オフライン商談比",
-      key: "onlineOfflineRatio",
-      type: "text",
-      previousValue: "40:60",
-      initialValue: "40:60",
-      aiSuggestions: ["45:55", "35:65", "50:50"]
-    },
-    {
-      label: "商談前の準備時間(分)",
-      key: "prepTime",
-      type: "number",
-      previousValue: "45",
-      initialValue: "45",
-      aiSuggestions: ["30", "60", "90"]
-    },
-    {
-      label: "商談後の作業時間(分)",
-      key: "postMeetingTime",
-      type: "number",
-      previousValue: "30",
-      initialValue: "30",
-      aiSuggestions: ["20", "40", "50"]
-    },
-    {
-      label: "使っているSFA/CRM",
-      key: "sfaCrm",
-      type: "text",
-      previousValue: "HubSpot",
-      initialValue: "HubSpot",
-      aiSuggestions: ["Salesforce", "Zoho CRM", "Microsoft Dynamics"]
-    },
-    {
-      label: "使っているDWH",
-      key: "dwh",
-      type: "text",
-      previousValue: "BigQuery",
-      initialValue: "BigQuery",
-      aiSuggestions: ["Redshift", "Snowflake", "Snowplow"]
-    },
-    {
-      label: "使っているMA",
-      key: "ma",
-      type: "text",
-      previousValue: "Pardot",
-      initialValue: "Pardot",
-      aiSuggestions: ["Marketo", "HubSpot MA", "Mailchimp"]
-    },
-    {
-      label: "その他使っているツール",
-      key: "otherTools",
-      type: "text",
-      previousValue: "Microsoft Teams, Google Meet",
-      initialValue: "Microsoft Teams, Zoom",
-      aiSuggestions: [
-        "Slack, Google Meet",
-        "Microsoft Teams, Zoom, Asana",
-        "Slack, Zoom, Trello"
-      ]
-    },
-    {
-      label: "一人当たりの月商談数",
-      key: "monthlyMeetings",
-      type: "number",
-      previousValue: "25",
-      initialValue: "25",
-      aiSuggestions: ["20", "30", "35"]
-    },
-    {
-      label: "商材単価（年間）",
-      key: "annualProductPrice",
-      type: "number",
-      previousValue: "6000000",
-      initialValue: "6000000",
-      aiSuggestions: ["6500000", "5500000", "7000000"]
-    },
-    {
-      label: "顧客ターゲット業界",
-      key: "targetIndustries",
-      type: "text",
-      previousValue: "製造業、小売業、サービス業",
-      initialValue: "製造業、小売業、IT業界",
-      aiSuggestions: [
-        "製造業、小売業、金融業",
-        "IT業界、サービス業、ヘルスケア",
-        "製造業、IT業界、エネルギー"
-      ]
-    }
-  ]
+// フォームデータの初期値（ローディング中やエラー時に使用）
+const defaultFormData: FormData = {
+  title: "",
+  mainFields: [],
+  otherFields: []
 }
 
 // テキストエリアの自動リサイズ用のカスタムフック
@@ -251,9 +64,77 @@ const useAutoResize = (value: string) => {
 
 export default function Component() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const eventId = searchParams.get('id')
 
-  // フォームデータをメモ化
-  const formData = useMemo(() => initialFormData, [])
+  // フォームデータの状態管理を更新
+  const [formData, setFormData] = useState<FormData & { id?: string }>(defaultFormData)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // AI推奨値の読み込み状態を管理（名前を変更）
+  const [aiLoadingStates, setAiLoadingStates] = useState<Record<string, boolean>>({})
+
+  // フォームデータの取得
+  useEffect(() => {
+    const fetchFormData = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+
+        let query = supabase
+          .from('events')
+          .select('id, initial_form_data, submitted_form_data')
+
+        if (eventId) {
+          query = query.eq('id', eventId)
+        } else {
+          query = query.order('created_at', { ascending: false }).limit(1)
+        }
+
+        const { data, error } = await query.single()
+
+        if (error) throw error
+
+        if (data) {
+          console.log('取得したデータ:', data);
+
+          const formDataToUse = data.submitted_form_data || data.initial_form_data;
+          
+          setFormData({
+            ...formDataToUse,
+            id: data.id
+          })
+
+          const initialValues: Record<string, string | number | Date> = {}
+          formDataToUse.mainFields?.forEach(field => {
+            initialValues[field.key] = data.submitted_form_data 
+              ? field.updateValue 
+              : field.previousValue
+          })
+          formDataToUse.otherFields?.forEach(field => {
+            initialValues[field.key] = data.submitted_form_data 
+              ? field.updateValue 
+              : field.previousValue
+          })
+          setValues(initialValues)
+
+        } else {
+          setFormData(defaultFormData)
+          setValues({})
+        }
+      } catch (err) {
+        console.error('データ取得エラー:', err)
+        setError('フォームデータの取得に失敗しました')
+        setFormData(defaultFormData)
+        setValues({})
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchFormData()
+  }, [eventId])
 
   // 日付フォーマット関数を追加
   const formatDate = useCallback((date: Date) => {
@@ -267,7 +148,6 @@ export default function Component() {
   const [typedTexts, setTypedTexts] = useState<Record<string, string>>({})
   const [showBorders, setShowBorders] = useState(false)
   const [aiSuggestions, setAiSuggestions] = useState<Record<string, SuggestionValue[]>>({})
-  const [isLoading, setIsLoading] = useState<Record<string, boolean>>({})
   const [showOnlyChanged, setShowOnlyChanged] = useState(false)
   const [isOtherFieldsOpen, setIsOtherFieldsOpen] = useState(false)
 
@@ -305,12 +185,10 @@ export default function Component() {
     const field = formData.mainFields.find(f => f.key === fieldKey) || formData.otherFields.find(f => f.key === fieldKey)
     if (!field || !field.aiSuggestions) return
 
-    setIsLoading(prev => ({ ...prev, [fieldKey]: true }))
+    setAiLoadingStates(prev => ({ ...prev, [fieldKey]: true }))
     try {
-      // 実際のAPIコールはここに追加
       await new Promise(resolve => setTimeout(resolve, 1000)) // デモ用の遅延
 
-      // ダミーデータをAI推奨値として設定
       setAiSuggestions(prev => ({
         ...prev,
         [fieldKey]: field.aiSuggestions || []
@@ -318,7 +196,7 @@ export default function Component() {
     } catch (error) {
       console.error('AI推奨値の取得に失敗しました:', error)
     } finally {
-      setIsLoading(prev => ({ ...prev, [fieldKey]: false }))
+      setAiLoadingStates(prev => ({ ...prev, [fieldKey]: false }))
     }
   }, [formData.mainFields, formData.otherFields])
 
@@ -468,7 +346,7 @@ export default function Component() {
           </div>
 
           {/* AI推奨値の表示部分 */}
-          {isLoading[field.key] ? (
+          {aiLoadingStates[field.key] ? (
             <div className="mt-3 flex items-center space-x-2">
               <Loader2 className="h-3 w-3 animate-spin" />
               <span className="text-xs text-muted-foreground">推定中...</span>
@@ -542,48 +420,40 @@ export default function Component() {
         </div>
       </div>
     )
-  }, [values, userModifiedFields, typingFields, typedTexts, showBorders, isChanged, handleUserModification, resetValue, getAiSuggestions, formatDate, isLoading, aiSuggestions, showOnlyChanged])
+  }, [values, userModifiedFields, typingFields, typedTexts, showBorders, isChanged, handleUserModification, resetValue, getAiSuggestions, formatDate, aiLoadingStates, aiSuggestions, showOnlyChanged])
 
   useEffect(() => {
-    // 初期値の設定
-    const initialValues: Record<string, string | number | Date> = {}
-    formData.mainFields.forEach(field => {
-      initialValues[field.key] = field.previousValue
-    })
-    formData.otherFields.forEach(field => {
-      initialValues[field.key] = field.previousValue
-    })
-    setValues(initialValues)
+    if (!formData) return
 
-    // 変更のある項目のみ遅延して設定
     const timer = setTimeout(() => {
       const updatedValues: Record<string, string | number | Date> = {}
       const updatedTypingFields: Record<string, boolean> = {}
       const updatedTypedTexts: Record<string, string> = {}
 
       formData.mainFields.forEach(field => {
-        if (isChanged(field.key, field.initialValue, field.previousValue)) {
-          if (typeof field.initialValue === 'string') {
+        const targetValue = field.updateValue || field.previousValue
+        if (isChanged(field.key, targetValue, field.previousValue)) {
+          if (typeof targetValue === 'string') {
             updatedTypingFields[field.key] = true
             updatedTypedTexts[field.key] = ''
-            typewriterEffect(field.key, field.initialValue as string)
+            typewriterEffect(field.key, targetValue as string)
           }
-          updatedValues[field.key] = field.initialValue
+          updatedValues[field.key] = targetValue
         }
       })
 
       formData.otherFields.forEach(field => {
-        if (isChanged(field.key, field.initialValue, field.previousValue)) {
-          if (typeof field.initialValue === 'string') {
+        const targetValue = field.updateValue || field.previousValue
+        if (isChanged(field.key, targetValue, field.previousValue)) {
+          if (typeof targetValue === 'string') {
             updatedTypingFields[field.key] = true
             updatedTypedTexts[field.key] = ''
-            typewriterEffect(field.key, field.initialValue as string)
+            typewriterEffect(field.key, targetValue as string)
           }
-          updatedValues[field.key] = field.initialValue
+          updatedValues[field.key] = targetValue
         }
       })
 
-      // バッチ更新
       if (Object.keys(updatedValues).length > 0) {
         setValues(prev => ({ ...prev, ...updatedValues }))
       }
@@ -599,10 +469,75 @@ export default function Component() {
     return () => clearTimeout(timer)
   }, [formData, isChanged, typewriterEffect])
 
-  const handleSave = useCallback(() => {
-    // ここで保存処理を行う（省略）
-    router.push('/thankyou-mail')
-  }, [router])
+  const handleSave = useCallback(async () => {
+    try {
+      console.log('=== デバッグ開始 ===');
+      console.log('現在のformData:', formData);
+      console.log('現在のvalues:', values);
+
+      const submittedFormData = {
+        title: formData.title,
+        mainFields: formData.mainFields.map(field => ({
+          ...field,
+          updateValue: values[field.key] || field.previousValue
+        })),
+        otherFields: formData.otherFields.map(field => ({
+          ...field,
+          updateValue: values[field.key] || field.previousValue
+        }))
+      }
+
+      console.log('作成したsubmittedFormData:', submittedFormData);
+      console.log('更新対象のID:', formData.id);
+
+      if (!formData.id) {
+        throw new Error('フォームデータのIDが見つかりません');
+      }
+
+      const { data, error } = await supabase
+        .from('events')
+        .update({ 
+          submitted_form_data: submittedFormData 
+        })
+        .eq('id', formData.id)
+        .select();
+
+      if (error) {
+        console.error('Supabaseエラー:', error);
+        throw error;
+      }
+
+      console.log('更新成功。返却データ:', data);
+      console.log('=== デバッグ終了 ===');
+
+      router.push('/thankyou-mail');
+    } catch (err) {
+      console.error('保存エラー:', err);
+      // エラー処理を追加
+    }
+  }, [formData, values, router]);
+
+  // ローディング中の表示
+  if (isLoading) {
+    return (
+      <Card className="w-full max-w-6xl mx-auto">
+        <CardContent className="flex items-center justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // エラー時の表示
+  if (error) {
+    return (
+      <Card className="w-full max-w-6xl mx-auto">
+        <CardContent className="py-8">
+          <div className="text-center text-red-500">{error}</div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card className="w-full max-w-6xl mx-auto">
