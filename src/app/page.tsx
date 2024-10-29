@@ -296,7 +296,7 @@ export default function Component() {
         budgetConfirmDate: ['2023/05/30', '2024/06/15', '2024/06/20'],
         customerIssue: [
           '顧客企業では、複数の部門間でのコミュニケーションが円滑に行われておらず、情報の共有が不十分です。これにより、業務の重複や遅延が発生し、全体的な生産性の低下を招いています。効果的な情報共有システムの導入が急務となっています。',
-          '顧客企業では、従来の顧客管理システムが老朽化しており、顧客データの正確な把握や分析が困難になっています。これにより、効果的なマーケティング戦略の立案や顧客ニーズへの迅速な対応が阻害されており、競争力の低下につながっています。',
+          '顧客企業では、従来顧客管理システム老朽化しており、顧客データの正確な把握や分析が困難になっています。これにより、効果的なマーケティング戦略の立案や顧客ニーズへの迅速な対応が阻害されており、競争力の低下につながっています。',
           '顧客企業では、急速なデジタル化に伴い、従業員のITスキルの不足が顕在化しています。これにより、新しいツールやシステムの導入が進まず、業務効率の改善が滞っています。従業員の能力開発と、使いやすいITソリューションの導入が課題となっています。'
         ],
         approvalProcess: ['部長→本部長→社長', '課長部長→社長', '部長→社長'],
@@ -389,28 +389,39 @@ export default function Component() {
     const typedText = typedTexts[key]
 
     return (
-      <div className="flex items-start py-2 border-b border-gray-100 hover:bg-gray-50">
+      <div className={cn(
+        "flex min-h-[3rem] border-b border-gray-100 hover:bg-gray-50",
+        key === 'customerIssue' ? "items-start py-3" : "items-center py-2"
+      )}>
         {/* ラベル */}
-        <div className="w-[18%]">
-          <Label htmlFor={key} className="text-sm font-medium text-gray-600">{label}</Label>
+        <div className="w-[18%] flex items-center min-h-full">
+          <Label 
+            htmlFor={key} 
+            className="text-sm font-medium text-gray-600 leading-normal px-4 py-0.5"
+          >
+            {label}
+          </Label>
         </div>
         
         {/* 元の値 */}
-        <div className="w-[24%] pl-2">
-          <span className="text-sm text-muted-foreground">
+        <div className="w-[24%] flex items-center min-h-full">
+          <span className="text-sm text-muted-foreground leading-normal px-4 py-0.5">
             {key.includes('Date') ? formatDate(previousValue as Date) : previousValue as string}
           </span>
         </div>
 
         {/* 矢印 */}
-        <div className="w-[4%] flex justify-center">
+        <div className="w-[4%] flex items-center justify-center min-h-full">
           <span className="text-gray-400">→</span>
         </div>
 
         {/* 入力欄 */}
-        <div className="w-[44%] flex flex-col">
+        <div className={cn(
+          "w-[44%] flex flex-col",
+          key === 'customerIssue' ? "pt-0.5" : "justify-center"
+        )}>
           <div className={cn(
-            "relative",
+            "relative w-full",
             shouldShowBorder && "before:absolute before:-inset-1 before:border-2 before:border-blue-500 before:rounded-md"
           )}>
             {React.cloneElement(content as React.ReactElement, {
@@ -426,30 +437,30 @@ export default function Component() {
               value: isTyping ? typedText : (content as React.ReactElement).props.value,
               className: cn(
                 (content as React.ReactElement).props.className,
-                "text-sm",
-                key === 'customerIssue' ? "min-h-[160px]" : "h-9" // 高さを160pxに変更
+                "text-sm w-full",
+                key === 'customerIssue' ? "min-h-[160px]" : "h-9"
               )
             })}
           </div>
           
           {isLoading[key] ? (
-            <div className="mt-2 flex items-center space-x-2"> {/* mt-1 から mt-2 に変更 */}
+            <div className="mt-3 flex items-center space-x-2">
               <Loader2 className="h-3 w-3 animate-spin" />
               <span className="text-xs text-muted-foreground">推定中...</span>
             </div>
           ) : aiSuggestions[key] && (
-            <div className="mt-2 space-y-1.5"> {/* 余白とレイアウトを調整 */}
-              <div className="text-xs text-muted-foreground">AI推定値:</div> {/* ラベルを追加 */}
-              <div className="flex flex-wrap gap-1.5"> {/* gap-1 から gap-1.5 に変更 */}
+            <div className="mt-3 space-y-2">
+              <div className="text-xs text-muted-foreground">AI推定値:</div>
+              <div className="flex flex-wrap gap-2">
                 {aiSuggestions[key].map((suggestion, index) => (
                   <Badge
                     key={index}
                     variant="outline"
                     className={cn(
-                      "text-xs cursor-pointer py-0.5 px-2", // py-0 から py-0.5 に変更
-                      index === 0 ? "bg-yellow-50 hover:bg-yellow-100 text-yellow-700" :
-                      index === 1 ? "bg-blue-50 hover:bg-blue-100 text-blue-700" :
-                      "bg-pink-50 hover:bg-pink-100 text-pink-700"
+                      "text-xs cursor-pointer py-1 px-3",
+                      index === 0 && "bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200",
+                      index === 1 && "bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200",
+                      index === 2 && "bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
                     )}
                     onClick={() => {
                       switch (key) {
@@ -489,7 +500,7 @@ export default function Component() {
         </div>
 
         {/* アクションボタン */}
-        <div className="w-[10%] flex justify-end space-x-1 pl-2">
+        <div className="w-[10%] flex items-center justify-end space-x-1 pl-2 min-h-full">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -549,261 +560,274 @@ export default function Component() {
         </div>
       </CardHeader>
       <CardContent className="py-0">
-        <div className="divide-y divide-gray-100">
-          {renderField('orderProbability', '受注確度', (
-            <Select value={orderProbability} onValueChange={setOrderProbability}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="選択してください" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="S">S</SelectItem>
-                <SelectItem value="A">A</SelectItem>
-                <SelectItem value="B">B</SelectItem>
-                <SelectItem value="C">C</SelectItem>
-              </SelectContent>
-            </Select>
-          ), previousValues.orderProbability)}
+        <div className="relative">
+          {/* 固定ヘッダー */}
+          <div className="sticky top-0 z-10 flex items-center py-2 border-y border-gray-200 bg-gray-50 text-sm font-medium text-gray-500">
+            <div className="w-[18%] px-4">項目</div>
+            <div className="w-[24%] px-4">元の値</div>
+            <div className="w-[48%] pl-6">更新する値</div>
+            <div className="w-[10%]"></div>
+          </div>
 
-          {renderField('orderAmount', '受注金額', (
-            <Input
-              id="orderAmount"
-              type="number"
-              value={orderAmount}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOrderAmount(e.target.value)}
-              className="w-full"
-            />
-          ), previousValues.orderAmount)}
-
-          {renderField('budgetPrepDate', '予算申請準備開始日', (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !budgetPrepDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {budgetPrepDate ? formatDate(budgetPrepDate) : <span>日付を選択</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={budgetPrepDate}
-                  onSelect={setBudgetPrepDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          ), previousValues.budgetPrepDate)}
-
-          {renderField('budgetRequestDate', '予算申請日', (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !budgetRequestDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {budgetRequestDate ? formatDate(budgetRequestDate) : <span>付を選択</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={budgetRequestDate}
-                  onSelect={setBudgetRequestDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          ), previousValues.budgetRequestDate)}
-
-          {renderField('budgetConfirmDate', '予算確定日', (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !budgetConfirmDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {budgetConfirmDate ? formatDate(budgetConfirmDate) : <span>日付を選択</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={budgetConfirmDate}
-                  onSelect={setBudgetConfirmDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          ), previousValues.budgetConfirmDate)}
-
-          {renderField('customerIssue', '顧客が抱えている課題', (
-            <Textarea
-              id="customerIssue"
-              value={customerIssue}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCustomerIssue(e.target.value)}
-              className="min-h-[160px]"
-            />
-          ), previousValues.customerIssue)}
-
-          {renderField('approvalProcess', '承認プロセス', (
-            <Input
-              id="approvalProcess"
-              value={approvalProcess}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setApprovalProcess(e.target.value)}
-              className="w-full"
-            />
-          ), previousValues.approvalProcess)}
-
-          {renderField('competitors', '競合他社・代替手段', (
-            <Input
-              id="competitors"
-              value={competitors}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompetitors(e.target.value)}
-              className="w-full"
-            />
-          ), previousValues.competitors)}
-        </div>
-
-        <Collapsible open={isOtherFieldsOpen} onOpenChange={setIsOtherFieldsOpen} className="mt-4">
-          <CollapsibleTrigger asChild>
-            <Button variant="outline" className="flex items-center justify-between w-full h-8 text-sm">
-              その他の項目
-              <ChevronDownIcon className={cn("h-4 w-4 transition-transform", isOtherFieldsOpen && "rotate-180")} />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-2">
+          {/* スクロール可能なコンテンツ */}
+          <div className="max-h-[calc(100vh-16rem)] overflow-y-auto">
             <div className="divide-y divide-gray-100">
-              {renderField('salesStructure', '営業組織の構造', (
-                <Input
-                  id="salesStructure"
-                  value={salesStructure}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSalesStructure(e.target.value)}
-                  className="w-full"
-                />
-              ), previousValues.salesStructure)}
+              {renderField('orderProbability', '受注確度', (
+                <Select value={orderProbability} onValueChange={setOrderProbability}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="選択してください" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="S">S</SelectItem>
+                    <SelectItem value="A">A</SelectItem>
+                    <SelectItem value="B">B</SelectItem>
+                    <SelectItem value="C">C</SelectItem>
+                  </SelectContent>
+                </Select>
+              ), previousValues.orderProbability)}
 
-              {renderField('salesPeople', '営業人数', (
+              {renderField('orderAmount', '受注金額', (
                 <Input
-                  id="salesPeople"
+                  id="orderAmount"
                   type="number"
-                  value={salesPeople}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSalesPeople(e.target.value)}
+                  value={orderAmount}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOrderAmount(e.target.value)}
                   className="w-full"
                 />
-              ), previousValues.salesPeople)}
+              ), previousValues.orderAmount)}
 
-              {renderField('onlineOfflineRatio', 'オンライン/オフライン商談比率', (
-                <Input
-                  id="onlineOfflineRatio"
-                  value={onlineOfflineRatio}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOnlineOfflineRatio(e.target.value)}
-                  className="w-full"
-                />
-              ), previousValues.onlineOfflineRatio)}
+              {renderField('budgetPrepDate', '予算申請準備開始日', (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !budgetPrepDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {budgetPrepDate ? formatDate(budgetPrepDate) : <span>日付を選択</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={budgetPrepDate}
+                      onSelect={setBudgetPrepDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              ), previousValues.budgetPrepDate)}
 
-              {renderField('prepTime', '商談前の準備時間(分)', (
-                <Input
-                  id="prepTime"
-                  type="number"
-                  value={prepTime}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrepTime(e.target.value)}
-                  className="w-full"
-                />
-              ), previousValues.prepTime)}
+              {renderField('budgetRequestDate', '予算申請日', (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !budgetRequestDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {budgetRequestDate ? formatDate(budgetRequestDate) : <span>付を選択</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={budgetRequestDate}
+                      onSelect={setBudgetRequestDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              ), previousValues.budgetRequestDate)}
 
-              {renderField('postMeetingTime', '商談後の作業時間(分)', (
-                <Input
-                  id="postMeetingTime"
-                  type="number"
-                  value={postMeetingTime}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPostMeetingTime(e.target.value)}
-                  className="w-full"
-                />
-              ), previousValues.postMeetingTime)}
+              {renderField('budgetConfirmDate', '予算確定日', (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !budgetConfirmDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {budgetConfirmDate ? formatDate(budgetConfirmDate) : <span>日付を選択</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={budgetConfirmDate}
+                      onSelect={setBudgetConfirmDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              ), previousValues.budgetConfirmDate)}
 
-              {renderField('sfaCrm', '使っているSFA/CRM', (
-                <Input
-                  id="sfaCrm"
-                  value={sfaCrm}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSfaCrm(e.target.value)}
-                  className="w-full"
+              {renderField('customerIssue', '顧客が抱えている課題', (
+                <Textarea
+                  id="customerIssue"
+                  value={customerIssue}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCustomerIssue(e.target.value)}
+                  className="min-h-[160px]"
                 />
-              ), previousValues.sfaCrm)}
+              ), previousValues.customerIssue)}
 
-              {renderField('dwh', '使っているDWH', (
+              {renderField('approvalProcess', '承認プロセス', (
                 <Input
-                  id="dwh"
-                  value={dwh}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDwh(e.target.value)}
+                  id="approvalProcess"
+                  value={approvalProcess}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setApprovalProcess(e.target.value)}
                   className="w-full"
                 />
-              ), previousValues.dwh)}
+              ), previousValues.approvalProcess)}
 
-              {renderField('ma', '使っているMA', (
+              {renderField('competitors', '競合他社・代替手段', (
                 <Input
-                  id="ma"
-                  value={ma}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMa(e.target.value)}
+                  id="competitors"
+                  value={competitors}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompetitors(e.target.value)}
                   className="w-full"
                 />
-              ), previousValues.ma)}
-
-              {renderField('otherTools', 'その他使っているツール', (
-                <Input
-                  id="otherTools"
-                  value={otherTools}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOtherTools(e.target.value)}
-                  className="w-full"
-                />
-              ), previousValues.otherTools)}
-
-              {renderField('monthlyMeetings', '一人当たりの月商談数', (
-                <Input
-                  id="monthlyMeetings"
-                  type="number"
-                  value={monthlyMeetings}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMonthlyMeetings(e.target.value)}
-                  className="w-full"
-                />
-              ), previousValues.monthlyMeetings)}
-
-              {renderField('annualProductPrice', '商材単価（年間）', (
-                <Input
-                  id="annualProductPrice"
-                  type="number"
-                  value={annualProductPrice}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnnualProductPrice(e.target.value)}
-                  className="w-full"
-                />
-              ), previousValues.annualProductPrice)}
-
-              {renderField('targetIndustries', '顧客ターゲット業界', (
-                <Input
-                  id="targetIndustries"
-                  value={targetIndustries}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTargetIndustries(e.target.value)}
-                  className="w-full"
-                />
-              ), previousValues.targetIndustries)}
+              ), previousValues.competitors)}
             </div>
-          </CollapsibleContent>
-        </Collapsible>
 
-        <div className="py-6"> {/* 保存ボタンを包む div を追加し、上下の余白を設定 */}
-          <Button className="w-full" onClick={handleSave}>保存</Button>
+            <Collapsible open={isOtherFieldsOpen} onOpenChange={setIsOtherFieldsOpen} className="mt-4">
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" className="flex items-center justify-between w-full h-8 text-sm">
+                  その他の項目
+                  <ChevronDownIcon className={cn("h-4 w-4 transition-transform", isOtherFieldsOpen && "rotate-180")} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-2">
+                <div className="divide-y divide-gray-100">
+                  {renderField('salesStructure', '営業組織の構造', (
+                    <Input
+                      id="salesStructure"
+                      value={salesStructure}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSalesStructure(e.target.value)}
+                      className="w-full"
+                    />
+                  ), previousValues.salesStructure)}
+
+                  {renderField('salesPeople', '営業人数', (
+                    <Input
+                      id="salesPeople"
+                      type="number"
+                      value={salesPeople}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSalesPeople(e.target.value)}
+                      className="w-full"
+                    />
+                  ), previousValues.salesPeople)}
+
+                  {renderField('onlineOfflineRatio', 'オンライン/オフライン商談比率', (
+                    <Input
+                      id="onlineOfflineRatio"
+                      value={onlineOfflineRatio}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOnlineOfflineRatio(e.target.value)}
+                      className="w-full"
+                    />
+                  ), previousValues.onlineOfflineRatio)}
+
+                  {renderField('prepTime', '商談前の準備時間(分)', (
+                    <Input
+                      id="prepTime"
+                      type="number"
+                      value={prepTime}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrepTime(e.target.value)}
+                      className="w-full"
+                    />
+                  ), previousValues.prepTime)}
+
+                  {renderField('postMeetingTime', '商談後の作業時間(分)', (
+                    <Input
+                      id="postMeetingTime"
+                      type="number"
+                      value={postMeetingTime}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPostMeetingTime(e.target.value)}
+                      className="w-full"
+                    />
+                  ), previousValues.postMeetingTime)}
+
+                  {renderField('sfaCrm', '使っているSFA/CRM', (
+                    <Input
+                      id="sfaCrm"
+                      value={sfaCrm}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSfaCrm(e.target.value)}
+                      className="w-full"
+                    />
+                  ), previousValues.sfaCrm)}
+
+                  {renderField('dwh', '使っているDWH', (
+                    <Input
+                      id="dwh"
+                      value={dwh}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDwh(e.target.value)}
+                      className="w-full"
+                    />
+                  ), previousValues.dwh)}
+
+                  {renderField('ma', '使っているMA', (
+                    <Input
+                      id="ma"
+                      value={ma}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMa(e.target.value)}
+                      className="w-full"
+                    />
+                  ), previousValues.ma)}
+
+                  {renderField('otherTools', 'その他使っているツール', (
+                    <Input
+                      id="otherTools"
+                      value={otherTools}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOtherTools(e.target.value)}
+                      className="w-full"
+                    />
+                  ), previousValues.otherTools)}
+
+                  {renderField('monthlyMeetings', '一人当たりの月商談数', (
+                    <Input
+                      id="monthlyMeetings"
+                      type="number"
+                      value={monthlyMeetings}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMonthlyMeetings(e.target.value)}
+                      className="w-full"
+                    />
+                  ), previousValues.monthlyMeetings)}
+
+                  {renderField('annualProductPrice', '商材単価（年間）', (
+                    <Input
+                      id="annualProductPrice"
+                      type="number"
+                      value={annualProductPrice}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnnualProductPrice(e.target.value)}
+                      className="w-full"
+                    />
+                  ), previousValues.annualProductPrice)}
+
+                  {renderField('targetIndustries', '顧客ターゲット業界', (
+                    <Input
+                      id="targetIndustries"
+                      value={targetIndustries}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTargetIndustries(e.target.value)}
+                      className="w-full"
+                    />
+                  ), previousValues.targetIndustries)}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            <div className="py-6">
+              <Button className="w-full" onClick={handleSave}>保存</Button>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
