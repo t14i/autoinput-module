@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react'
-import { useRouter, useSearchParams, useParams } from 'next/navigation'
+import React, { useState, useCallback, useEffect, useRef } from 'react'
+import { useRouter, useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -63,8 +63,6 @@ const useAutoResize = (value: string) => {
 
 export default function Component() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const eventId = searchParams.get('id')
   const params = useParams()
   const id = params.id as string
 
@@ -110,12 +108,12 @@ export default function Component() {
         })
 
         const initialValues: Record<string, string | number | Date> = {}
-        formDataToUse.mainFields?.forEach(field => {
+        formDataToUse.mainFields?.forEach((field: FieldType) => {
           initialValues[field.key] = data.submitted_form_data 
             ? field.updateValue 
             : field.previousValue
         })
-        formDataToUse.otherFields?.forEach(field => {
+        formDataToUse.otherFields?.forEach((field: FieldType) => {
           initialValues[field.key] = data.submitted_form_data 
             ? field.updateValue 
             : field.previousValue

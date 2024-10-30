@@ -194,8 +194,7 @@ export default function ThankYouMail({ params }: { params: { id: string } }) {
     return <div>Loading...</div>
   }
 
-  const handleAction = async (action: 'send' | 'complete') => {
-    // TODO: API経由で送信または完了処理を実装
+  const handleAction = async () => {
     setShowCheckmark(true)
     setTimeout(() => {
       setShowCheckmark(false)
@@ -208,12 +207,12 @@ export default function ThankYouMail({ params }: { params: { id: string } }) {
       <CardHeader className="flex flex-row items-center justify-between py-6">
         <CardTitle className="text-2xl font-bold">{event.title}</CardTitle>
         <div className="flex items-center space-x-2">
-          <Button onClick={() => handleAction('send')}>
+          <Button onClick={() => handleAction()}>
             送信
           </Button>
           <Button
             variant="outline"
-            onClick={() => handleAction('complete')}
+            onClick={() => handleAction()}
           >
             対応済にする
           </Button>

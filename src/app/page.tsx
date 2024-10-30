@@ -9,12 +9,27 @@ import { format } from "date-fns"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 
+// イベントの型定義
 type Event = {
   id: string
   title: string
   occurred_at: string
-  initial_form_data: any
-  submitted_form_data: any | null
+  status: string
+  submitted_form_data?: {
+    mainFields: Array<{
+      key: string
+      label: string
+      previousValue: string | number | Date
+      updateValue: string | number | Date
+    }>
+    otherFields: Array<{
+      key: string
+      label: string
+      previousValue: string | number | Date
+      updateValue: string | number | Date
+    }>
+  }
+  // 他の必要なプロパティがあれば追加
 }
 
 export default function Page() {
