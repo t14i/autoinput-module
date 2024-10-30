@@ -105,7 +105,8 @@ export default function Component() {
         
         setFormData({
           ...formDataToUse,
-          id: data.id
+          id: data.id,
+          title: data.title
         })
 
         const initialValues: Record<string, string | number | Date> = {}

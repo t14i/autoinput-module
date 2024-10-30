@@ -12,7 +12,7 @@ export async function GET(
 
   const { data, error } = await supabase
     .from('events')
-    .select('id, initial_form_data, submitted_form_data')
+    .select('id, title, initial_form_data, submitted_form_data')
     .eq('id', params.id)
     .single()
 
