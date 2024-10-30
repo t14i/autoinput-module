@@ -540,10 +540,10 @@ export default function Component() {
   }
 
   return (
-    <Card className="w-full max-w-6xl mx-auto">
-      <CardHeader className="py-4">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-xl font-bold">{formData.title}</CardTitle>
+    <Card className="w-full max-w-6xl mx-auto mt-8">
+      <CardHeader className="flex flex-row items-center justify-between py-6">
+        <CardTitle className="text-2xl font-bold">{formData.title}</CardTitle>
+        <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
             <Switch
               id="show-changed"
@@ -554,6 +554,7 @@ export default function Component() {
               変更項目のみ
             </Label>
           </div>
+          <Button onClick={handleSave}>保存</Button>
         </div>
       </CardHeader>
       <CardContent className="py-0">
@@ -567,7 +568,7 @@ export default function Component() {
             <div className="w-[10%]"></div>
           </div>
 
-          {/* コンテンツ（高さ制限を削除） */}
+          {/* コンテンツ */}
           <div>
             <div className="divide-y divide-gray-100">
               {/* メインフィールド */}
@@ -577,21 +578,23 @@ export default function Component() {
             {/* その他の項目 */}
             <Collapsible open={isOtherFieldsOpen} onOpenChange={setIsOtherFieldsOpen} className="mt-4">
               <CollapsibleTrigger asChild>
-                <Button variant="outline" className="flex items-center justify-between w-full h-8 text-sm">
+                <Button 
+                  variant="outline" 
+                  className="flex items-center justify-between w-full h-8 text-sm bg-gray-50 hover:bg-gray-100 border-gray-200"
+                >
                   その他の項目
                   <ChevronDownIcon className={cn("h-4 w-4 transition-transform", isOtherFieldsOpen && "rotate-180")} />
                 </Button>
               </CollapsibleTrigger>
-              <CollapsibleContent className="mt-2">
-                <div className="divide-y divide-gray-100">
+              <CollapsibleContent className="mt-2 rounded-b-lg border-gray-200">
+                <div className="divide-y divide-gray-200">
                   {formData.otherFields.map(field => renderField(field))}
                 </div>
               </CollapsibleContent>
             </Collapsible>
-          </div>
-
-          <div className="py-6">
-            <Button className="w-full" onClick={handleSave}>保存</Button>
+            
+            {/* 下部のスペースを追加 */}
+            <div className="h-8" />
           </div>
         </div>
       </CardContent>

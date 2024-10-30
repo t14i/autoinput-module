@@ -115,7 +115,7 @@ YY氏（24分12秒）: "今ですねそのセールスフォースにしろど�
 •   XXX社：検証に必要な商談データを準備する（担当：古谷氏、期限：10月15日）
 
 6. 総括
-本ミーティングでは、データブル社のサービスがXXX社の現在のCRM運用における課題を解決する可能性が高いことが確認された。特に、データ入力の自動化と分析しやすいデータ形式の実現に期待が寄せられた。次回のミーティングでは、具体的な検証プロセスを決定し、実際���データを用いた検証を開始する予定である。また、ヒューマンリソシア社との代理店契約の可について今後検討していくことが確認された。
+本ミーティングでは、データブル社のサービスがXXX社の現在のCRM運用における課題を解決する可能性が高いことが確認された。特に、データ入力の自動化と分析しやすいデータ形式の実現に期待が寄せられた。次回のミーティングでは、具体的な検証プ��セスを決定し、実ータを用いた検証を開始する予定である。また、ヒューマンリソシア社との代理店契約の可について今後検討していくことが確認された。
 
 7. 次回会議情報（日程、主要議題）
 •   日時：2023年10月15日 13:00-
@@ -272,11 +272,11 @@ YY氏（24分12秒）: "今ですねそのセールスフォースにしろど�
   return (
     <>
       <Card className="w-full max-w-7xl mx-auto mt-8">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardHeader className="flex flex-row items-center justify-between py-6">
           <CardTitle className="text-2xl font-bold">株式会社XXX様商談（2024/10/1）</CardTitle>
-          <div className="space-x-2">
-            <Button onClick={() => handleAction('send')}>送信</Button>
-            <Button variant="outline" onClick={() => handleAction('complete')}>完了にする</Button>
+          <div className="flex items-center space-x-4">
+            <span>変更項目のみ</span>
+            <Button onClick={() => handleAction('send')}>保存</Button>
           </div>
         </CardHeader>
         <CardContent>
