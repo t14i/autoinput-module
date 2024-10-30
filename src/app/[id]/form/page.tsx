@@ -18,7 +18,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Badge } from "@/components/ui/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { ChevronDownIcon } from "lucide-react"
-import { supabase } from '@/lib/supabase'
 
 // フォームフィールドの型定義
 type FieldType = {
@@ -86,21 +85,19 @@ export default function Component() {
 
         if (!id) {
           setError('IDが指定されていません')
-          router.push('/')  // リストページにリダイレクト
+          router.push('/')
           return
         }
 
-        const { data, error } = await supabase
-          .from('events')
-          .select('id, initial_form_data, submitted_form_data')
-          .eq('id', id)
-          .single()
+        const response = await fetch(`/api/events/${id}`)
+        if (!response.ok) {
+          throw new Error('データの取得に失敗しました')
+        }
 
-        if (error) throw error
-
+        const data = await response.json()
         if (!data) {
           setError('データが見つかりません')
-          router.push('/')  // リストページにリダイレクト
+          router.push('/')
           return
         }
 
@@ -127,7 +124,7 @@ export default function Component() {
       } catch (err) {
         console.error('データ取得エラー:', err)
         setError('フォームデータの取得に失敗しました')
-        router.push('/')  // リストページにリダイレクト
+        router.push('/')
       } finally {
         setIsLoading(false)
       }
@@ -471,9 +468,9 @@ export default function Component() {
 
   const handleSave = useCallback(async () => {
     try {
-      console.log('=== デバッグ開始 ===');
-      console.log('現在のformData:', formData);
-      console.log('現在のvalues:', values);
+      if (!formData.id) {
+        throw new Error('フォームデータのIDが見つかりません')
+      }
 
       const submittedFormData = {
         title: formData.title,
@@ -487,35 +484,24 @@ export default function Component() {
         }))
       }
 
-      console.log('作成したsubmittedFormData:', submittedFormData);
-      console.log('更新対象のID:', formData.id);
+      const response = await fetch(`/api/events/${formData.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ submitted_form_data: submittedFormData }),
+      })
 
-      if (!formData.id) {
-        throw new Error('フォームデータのIDが見つかりません');
+      if (!response.ok) {
+        throw new Error('保存に失敗しました')
       }
 
-      const { data, error } = await supabase
-        .from('events')
-        .update({ 
-          submitted_form_data: submittedFormData 
-        })
-        .eq('id', formData.id)
-        .select();
-
-      if (error) {
-        console.error('Supabaseエラー:', error);
-        throw error;
-      }
-
-      console.log('更新成功。返却データ:', data);
-      console.log('=== デバッグ終了 ===');
-
-      router.push(`/${formData.id}/mail`);
+      router.push(`/${formData.id}/mail`)
     } catch (err) {
-      console.error('保存エラー:', err);
+      console.error('保存エラー:', err)
       // エラー処理を追加
     }
-  }, [formData, values, router]);
+  }, [formData, values, router])
 
   // ローディング中の表示
   if (isLoading) {
