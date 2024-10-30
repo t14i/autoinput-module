@@ -1,8 +1,8 @@
 ALTER TABLE events
 ADD COLUMN title text,
 ADD COLUMN occurred_at timestamptz,
-ADD COLUMN reply_message text,
-ADD COLUMN summary text;
+ADD COLUMN reply_message jsonb,
+ADD COLUMN content jsonb;
 
 -- 既存のレコードのoccurred_atとtitleにデフォルト値を設定
 UPDATE events
@@ -19,4 +19,4 @@ ALTER COLUMN title SET NOT NULL;
 COMMENT ON COLUMN events.title IS 'タイトル';
 COMMENT ON COLUMN events.occurred_at IS '発生時間';
 COMMENT ON COLUMN events.reply_message IS '返信メッセージ';
-COMMENT ON COLUMN events.summary IS '内容の要約';
+COMMENT ON COLUMN events.content IS '内容';

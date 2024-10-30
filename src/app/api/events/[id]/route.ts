@@ -10,9 +10,17 @@ export async function GET(
 ) {
   const supabase = createRouteHandlerClient({ cookies })
 
-  const { data, error } = await supabase
+  const { data: event, error } = await supabase
     .from('events')
-    .select('id, title, initial_form_data, submitted_form_data')
+    .select(`
+      id,
+      title,
+      occurred_at,
+      reply_message,
+      content,
+      initial_form_data,
+      submitted_form_data
+    `)
     .eq('id', params.id)
     .single()
 
@@ -20,7 +28,7 @@ export async function GET(
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json(data)
+  return NextResponse.json(event)
 }
 
 export async function PUT(
