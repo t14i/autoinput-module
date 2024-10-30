@@ -71,7 +71,7 @@ Web会議リンク：https://us06web.zoom.us/j/xxxxxxxxxxx
 
 高岡氏（1分54秒）: "弊社なんですが2020年設立のですねスタートアップとなっております。提供しているサービスとしてはもともとはですねiPaasというふうに呼ばれるクラウドサービスとクラウドサービス同士のデータ連携つなぎ先が基幹システムとかでも調整はできたりするんですが、このデータ連携のプラットフォームでデータブルというサービスを開発提供させていただいている会社でございました。"
 
-•   データブル社は比較的新しい企業だが、強力なエンジニアリングチームを持つ
+•   データブル社は比較的新しい企業だが、強力なエンジニアリングチ��ムを持つ
 •   代表の高松氏は楽天のビッグデータエンジニア出身で、不動産向けSaaS企業のCTOを経験している
 •   高岡氏は前職でクラウド会計ソフトのAPI連携を担当しており、顧客のニーズに応えるためにデータブルに参画した
 
@@ -115,7 +115,7 @@ YY氏（24分12秒）: "今ですねそのセールスフォースにしろど�
 •   XXX社：検証に必要な商談データを準備する（担当：古谷氏、期限：10月15日）
 
 6. 総括
-本ミーティングでは、データブル社のサービスがXXX社の現在のCRM運用における課題を解決する可能性が高いことが確認された。特に、データ入力の自動化と分析しやすいデータ形式の実現に期待が寄せられた。次回のミーティングでは、具体的な検証プ��セスを決定し、実ータを用いた検証を開始する予定である。また、ヒューマンリソシア社との代理店契約の可について今後検討していくことが確認された。
+本ミーティングでは、データブル社のサービスがXXX社の現在のCRM運用における課題を解決する可能性が高いことが確認された。特に、データ入力の自動化と分析しやすいデータ形式の実現に期待が寄せられた。次回のミーティングでは、具体的な検証プロセスを決定し、実ータを用いた検証を開始する予定である。また、ヒューマンリソシア社との代理店契約の可について今後検討していくことが確認された。
 
 7. 次回会議情報（日程、主要議題）
 •   日時：2023年10月15日 13:00-
@@ -219,43 +219,41 @@ YY氏（24分12秒）: "今ですねそのセールスフォースにしろど�
   const renderField = (label: string, value: string, onChange: (value: string) => void, isTextarea = false, isEmail = false, ref?: React.RefObject<HTMLTextAreaElement>) => (
     <div className="relative space-y-2">
       <Label htmlFor={label}>{label}</Label>
-      <div className="relative">
-        {isTextarea ? (
-          <div className="relative">
-            <textarea
-              ref={ref}
-              id={label}
-              value={value}
-              onChange={(e) => {
-                onChange(e.target.value)
-                if (ref && ref.current) {
-                  ref.current.style.height = 'auto'
-                  ref.current.style.height = `${ref.current.scrollHeight}px`
-                }
-              }}
-              className="w-full min-h-[200px] p-2 pr-10 border rounded-md resize-none overflow-hidden"
-              style={{ height: 'auto' }}
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2"
-              onClick={() => copyToClipboard(value)}
-            >
-              <CopyIcon className="h-4 w-4" />
-            </Button>
-          </div>
-        ) : isEmail ? (
-          <EmailInput value={value} onChange={onChange} />
-        ) : (
+      {isTextarea ? (
+        <div className="relative">
+          <textarea
+            ref={ref}
+            id={label}
+            value={value}
+            onChange={(e) => {
+              onChange(e.target.value)
+              if (ref && ref.current) {
+                ref.current.style.height = 'auto'
+                ref.current.style.height = `${ref.current.scrollHeight}px`
+              }
+            }}
+            className="w-full min-h-[200px] p-2 pr-10 border rounded-md resize-none overflow-hidden"
+            style={{ height: 'auto' }}
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2"
+            onClick={() => copyToClipboard(value)}
+          >
+            <CopyIcon className="h-4 w-4" />
+          </Button>
+        </div>
+      ) : isEmail ? (
+        <EmailInput value={value} onChange={onChange} />
+      ) : (
+        <div className="relative">
           <Input
             id={label}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             className="pr-10"
           />
-        )}
-        {!isTextarea && !isEmail && (
           <Button
             variant="ghost"
             size="icon"
@@ -264,8 +262,8 @@ YY氏（24分12秒）: "今ですねそのセールスフォースにしろど�
           >
             <CopyIcon className="h-4 w-4" />
           </Button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 
@@ -274,9 +272,18 @@ YY氏（24分12秒）: "今ですねそのセールスフォースにしろど�
       <Card className="w-full max-w-7xl mx-auto mt-8">
         <CardHeader className="flex flex-row items-center justify-between py-6">
           <CardTitle className="text-2xl font-bold">株式会社XXX様商談（2024/10/1）</CardTitle>
-          <div className="flex items-center space-x-4">
-            <span>変更項目のみ</span>
-            <Button onClick={() => handleAction('send')}>保存</Button>
+          <div className="flex items-center space-x-2">
+            <Button
+              onClick={() => handleAction('send')}
+            >
+              送信
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleAction('complete')}
+            >
+              対応済にする
+            </Button>
           </div>
         </CardHeader>
         <CardContent>

@@ -474,7 +474,6 @@ export default function Component() {
       }
 
       const submittedFormData = {
-        title: formData.title,
         mainFields: formData.mainFields.map(field => ({
           ...field,
           updateValue: values[field.key] || field.previousValue

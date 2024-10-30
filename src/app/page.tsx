@@ -1,96 +1,121 @@
 'use client'
 
-import React from 'react'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, CalendarIcon, SunIcon } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Loader2, Sun } from "lucide-react"
+import { format } from "date-fns"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 
-type Task = {
+type Event = {
   id: string
   title: string
-  date: string
+  occurred_at: string
+  initial_form_data: any
+  submitted_form_data: any | null
 }
 
-const TaskList: React.FC = () => {
-  const router = useRouter()
-  const [tasks, setTasks] = useState<Task[]>([
-    { id: '9a42b851-31f4-415e-bf79-05e76ea67ede', title: '株式会社YYY様商談（2024/9/30）', date: '2024-09-30 14:00' },
-    { id: '2', title: '株式会社ZZZ様商談（2024/10/1）', date: '2024-10-01 10:00' },
-  ])
+export default function Page() {
+  const [events, setEvents] = useState<Event[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [showCompleted, setShowCompleted] = useState(false)
 
-  const handleAction = (action: 'respond' | 'complete', taskId: string) => {
-    if (action === 'respond') {
-      router.push(`/${taskId}/form`)
-    } else if (action === 'complete') {
-      setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId))
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+
+        const response = await fetch('/api/events')
+        if (!response.ok) {
+          throw new Error('データの取得に失敗しました')
+        }
+
+        const data = await response.json()
+        setEvents(data)
+      } catch (err) {
+        console.error('データ取得エラー:', err)
+        setError('イベントの取得に失敗しました')
+      } finally {
+        setIsLoading(false)
+      }
     }
-  }
 
-  const handleDelete = (taskId: string) => {
-    setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId))
-  }
+    fetchEvents()
+  }, [])
 
-  if (tasks.length === 0) {
+  const filteredEvents = events.filter(event => 
+    showCompleted ? true : !event.submitted_form_data
+  )
+
+  if (isLoading) {
     return (
-      <Card className="w-full max-w-4xl mx-auto mt-8">
-        <CardContent className="flex flex-col items-center justify-center py-16">
-          <SunIcon className="w-24 h-24 text-yellow-400 mb-4" />
-          <h2 className="text-2xl font-bold mb-2">今日のタスクは終了しました</h2>
-          <p className="text-lg text-gray-600">お疲れ様でした</p>
+      <Card className="w-full max-w-4xl mx-auto">
+        <CardContent className="flex items-center justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card className="w-full max-w-4xl mx-auto">
+        <CardContent className="py-8">
+          <div className="text-center text-red-500">{error}</div>
         </CardContent>
       </Card>
     )
   }
 
   return (
-    <Card className="w-full max-w-4xl mx-auto mt-8">
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold">タスク一覧</CardTitle>
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>タスク一覧</CardTitle>
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="show-completed"
+            checked={showCompleted}
+            onCheckedChange={setShowCompleted}
+          />
+          <Label htmlFor="show-completed" className="text-sm text-muted-foreground">
+            対応済も表示
+          </Label>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {tasks.map(task => (
-            <Card key={task.id} className="p-4">
+          {filteredEvents.map((event) => (
+            <Link
+              key={event.id}
+              href={`/${event.id}/form`}
+              className="block p-4 rounded-lg border hover:bg-gray-50 transition-colors"
+            >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold">{task.title}</h3>
-                  <p className="text-sm text-gray-500 flex items-center mt-1">
-                    <CalendarIcon className="mr-1 h-4 w-4" />
-                    {task.date}
+                  <h3 className="font-medium">{event.title}</h3>
+                  <p className="text-sm text-gray-500">
+                    {format(new Date(event.occurred_at), 'yyyy/MM/dd HH:mm')}
                   </p>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Button size="sm" onClick={() => handleAction('respond', task.id)}>対応する</Button>
-                  <Button size="sm" variant="outline" onClick={() => handleAction('complete', task.id)}>完了にする</Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">メニューを開く</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleDelete(task.id)}>
-                        削除
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+                <Badge variant={event.submitted_form_data ? "secondary" : "default"}>
+                  {event.submitted_form_data ? "対応済" : "未対応"}
+                </Badge>
               </div>
-            </Card>
+            </Link>
           ))}
+          
+          {filteredEvents.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              <Sun className="h-12 w-12 mx-auto mb-4" />
+              今日のタスクは終了しましたお疲れ様でした。
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
   )
 }
-
-export default TaskList
