@@ -104,7 +104,9 @@ export default function Component() {
         setFormData({
           ...formDataToUse,
           id: data.id,
-          title: data.title
+          title: data.title,
+          mainFields: formDataToUse.mainFields || [],
+          otherFields: formDataToUse.otherFields || []
         })
 
         const initialValues: Record<string, string | number | Date> = {}
@@ -559,24 +561,26 @@ export default function Component() {
               {formData.mainFields.map(field => renderField(field))}
             </div>
 
-            {/* その他の項目 */}
-            <Collapsible open={isOtherFieldsOpen} onOpenChange={setIsOtherFieldsOpen} className="mt-4">
-              <CollapsibleTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="flex items-center justify-between w-full h-8 text-sm bg-gray-50 hover:bg-gray-100 border-gray-200"
-                >
-                  その他の項目
-                  <ChevronDownIcon className={cn("h-4 w-4 transition-transform", isOtherFieldsOpen && "rotate-180")} />
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-2 rounded-b-lg border-gray-200">
-                <div className="divide-y divide-gray-200">
-                  {formData.otherFields.map(field => renderField(field))}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-            
+            {/* otherFieldsが存在し、かつ空でない場合のみ表示 */}
+            {formData.otherFields && formData.otherFields.length > 0 && (
+              <Collapsible open={isOtherFieldsOpen} onOpenChange={setIsOtherFieldsOpen} className="mt-4">
+                <CollapsibleTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center justify-between w-full h-8 text-sm bg-gray-50 hover:bg-gray-100 border-gray-200"
+                  >
+                    その他の項目
+                    <ChevronDownIcon className={cn("h-4 w-4 transition-transform", isOtherFieldsOpen && "rotate-180")} />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-2 rounded-b-lg border-gray-200">
+                  <div className="divide-y divide-gray-200">
+                    {formData.otherFields.map(field => renderField(field))}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+
             {/* 下部のスペースを追加 */}
             <div className="h-8" />
           </div>
