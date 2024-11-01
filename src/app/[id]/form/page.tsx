@@ -61,6 +61,19 @@ const useAutoResize = (value: string) => {
   return textareaRef;
 };
 
+// 数値フォーマット用の関数を修正
+const formatNumber = (value: string | number | Date): string => {
+  if (!value) return '';
+  if (value instanceof Date) return '';
+  if (typeof value === 'string' && !value) return '';
+  return Number(value).toLocaleString();
+}
+
+// 数値の入力処理用の関数を追加
+const handleNumberInput = (value: string): string => {
+  return value.replace(/[^\d]/g, '');
+}
+
 export default function Component() {
   const router = useRouter()
   const params = useParams()
@@ -230,6 +243,26 @@ export default function Component() {
       )
     }
 
+    // 元の値の表示を修正
+    const getPreviousValueDisplay = (field: FieldType): string => {
+      if (!field.previousValue) return '値なし';
+      
+      if (field.type === 'select') {
+        const option = field.options?.find(opt => opt.value === String(field.previousValue));
+        return option?.label || String(field.previousValue);
+      }
+      if (field.type === 'number') {
+        if (typeof field.previousValue === 'number' || typeof field.previousValue === 'string') {
+          return formatNumber(field.previousValue);
+        }
+        return '値なし';
+      }
+      if (field.type === 'date') {
+        return formatDate(new Date(field.previousValue as Date));
+      }
+      return String(field.previousValue);
+    }
+
     const getFieldContent = () => {
       switch (field.type) {
         case 'select':
@@ -256,11 +289,12 @@ export default function Component() {
         case 'number':
           return (
             <Input
-              type="number"
-              value={String(currentValue)}
+              type="text"
+              value={formatNumber(currentValue as string)}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                setValues(prev => ({ ...prev, [field.key]: e.target.value }))
-                handleUserModification(field.key)
+                const rawValue = handleNumberInput(e.target.value);
+                setValues(prev => ({ ...prev, [field.key]: rawValue }));
+                handleUserModification(field.key);
               }}
               className="w-full"
             />
@@ -322,7 +356,7 @@ export default function Component() {
         {/* 元の値 */}
         <div className="w-[24%] flex items-center min-h-full">
           <span className="text-sm text-muted-foreground leading-normal px-4 py-0.5">
-            {field.type === 'date' ? formatDate(new Date(previousValue as Date)) : previousValue as string}
+            {getPreviousValueDisplay(field)}
           </span>
         </div>
 
@@ -418,7 +452,7 @@ export default function Component() {
         </div>
       </div>
     )
-  }, [values, userModifiedFields, typingFields, typedTexts, showBorders, isChanged, handleUserModification, resetValue, getAiSuggestions, formatDate, aiLoadingStates, aiSuggestions, showOnlyChanged])
+  }, [values, userModifiedFields, typingFields, typedTexts, showBorders, isChanged, handleUserModification, resetValue, getAiSuggestions, formatDate, aiLoadingStates, aiSuggestions, showOnlyChanged, formatNumber, handleNumberInput])
 
   useEffect(() => {
     if (!formData) return
