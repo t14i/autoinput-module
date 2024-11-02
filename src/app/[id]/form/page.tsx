@@ -274,7 +274,7 @@ export default function Component() {
                 handleUserModification(field.key)
               }}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full h-10">
                 <SelectValue placeholder="選択してください" />
               </SelectTrigger>
               <SelectContent>
